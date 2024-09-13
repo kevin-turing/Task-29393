@@ -1,164 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>THEMIS & ARTEMIS Mission Visualization</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.3.0/d3.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
-    />
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        background: #000;
-        color: #fff;
-        overflow: hidden;
-      }
-      #visualization {
-        width: 100vw;
-        height: 100vh;
-        position: relative;
-      }
-      .orbit {
-        stroke: #fff;
-        fill: none;
-        stroke-width: 1;
-      }
-      .probe {
-        fill: #ffd700;
-        stroke: #000;
-        stroke-width: 0.5;
-      }
-      .info-box {
-        position: absolute;
-        background: rgba(0, 0, 0, 0.8);
-        padding: 10px;
-        border-radius: 5px;
-        display: none;
-      }
-      .phase-button {
-        background-color: #4caf50; /* Green */
-        border: none;
-        color: white;
-        padding: 15px 32px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 16px;
-        margin: 4px 2px;
-        cursor: pointer;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="visualization"></div>
-    <div id="info" class="info-box"></div>
-    <div style="position: absolute; bottom: 10px; left: 10px">
-      <button class="phase-button" onclick="showPhase('Tail')">
-        Tail Phase
-      </button>
-      <button class="phase-button" onclick="showPhase('Dawn')">
-        Dawn Phase
-      </button>
-      <button class="phase-button" onclick="showPhase('Dayside')">
-        Dayside Phase
-      </button>
-      <button class="phase-button" onclick="showPhase('Dusk')">
-        Dusk Phase
-      </button>
-    </div>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skipping Game</title>
+<style>
+body, html {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f0f0;
+    font-family: Arial, sans-serif;
+}
 
-    <script>
-      const width = window.innerWidth,
-        height = window.innerHeight;
-      const svg = d3
-        .select('#visualization')
-        .append('svg')
-        .attr('width', width)
-        .attr('height', height);
+#game-area {
+    position: relative;
+    width: 800px;
+    height: 400px;
+    border: 2px solid #000;
+    overflow: hidden;
+    background: skyblue;
+}
 
-      const phases = {
-        Tail: { apogee: 12, sector: 'nightside', mmsPosition: 'dawn' },
-        Dawn: { apogee: 12, sector: 'dawnside', mmsPosition: 'dayside' },
-        Dayside: { apogee: 12, sector: 'dayside', mmsPosition: 'dusk' },
-        Dusk: { apogee: 13, sector: 'duskside', mmsPosition: 'tail' },
-      };
+#player {
+    width: 50px;
+    height: 100px;
+    position: absolute;
+    bottom: 20px;
+    left: 50px;
+    transition: bottom 0.3s;
+}
 
-      function drawOrbits(phase) {
-        svg.selectAll('*').remove();
-        const phaseData = phases[phase];
-        const scale = d3
-          .scaleLinear()
-          .domain([0, 30])
-          .range([0, height / 2 - 50]);
-        const center = { x: width / 2, y: height / 2 };
+#rope {
+    width: 100%;
+    height: 20px;
+    background: brown;
+    position: absolute;
+    bottom: 0;
+    transform-origin: center;
+    transform: rotate(0deg);
+}
 
-        // Earth
-        svg
-          .append('circle')
-          .attr('cx', center.x)
-          .attr('cy', center.y)
-          .attr('r', 20)
-          .attr('fill', 'blue');
+.distraction {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+}
 
-        // Draw THEMIS orbits
-        for (let i = 0; i < 3; i++) {
-          const r = scale(phaseData.apogee + i * 0.5);
-          svg
-            .append('ellipse')
-            .attr('class', 'orbit')
-            .attr('cx', center.x)
-            .attr('cy', center.y)
-            .attr('rx', r)
-            .attr('ry', r * 0.5)
-            .attr('transform', `rotate(${i * 30}, ${center.x}, ${center.y})`);
+#game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 40px;
+    color: red;
+    display: none;
+    z-index: 10;
+}
 
-          // Probe position
-          svg
-            .append('circle')
-            .attr('class', 'probe')
-            .attr('cx', center.x + r * Math.cos((i * Math.PI) / 6))
-            .attr('cy', center.y + r * 0.5 * Math.sin((i * Math.PI) / 6))
-            .attr('r', 5)
-            .on('mouseover', function () {
-              showInfo(phase, i);
-            })
-            .on('mouseout', hideInfo);
+@keyframes jump {
+    0%, 100% { bottom: 20px; }
+    50% { bottom: 150px; }
+}
+</style>
+</head>
+<body>
+<div id="game-area">
+    <svg id="player" viewBox="0 0 50 100">
+        <rect x="10" y="10" width="30" height="80" fill="blue"/>
+    </svg>
+    <div id="rope"></div>
+    <div id="game-over">GAME OVER</div>
+    <!-- SVG elements for distractions will be added here dynamically -->
+</div>
+
+<script>
+const gameArea = document.getElementById('game-area');
+const player = document.getElementById('player');
+const rope = document.getElementById('rope');
+const gameOverSign = document.getElementById('game-over');
+let score = 0;
+let ropeSpeed = 2000; // initial speed in ms for one full rotation
+let isJumping = false;
+let gameInterval, distractionInterval;
+
+function startGame() {
+    gameOverSign.style.display = 'none';
+    score = 0;
+    ropeSpeed = 2000;
+    gameInterval = setInterval(rotateRope, ropeSpeed);
+    distractionInterval = setInterval(addDistraction, 3000);
+    document.addEventListener('keydown', jump);
+}
+
+function rotateRope() {
+    let angle = 0;
+    const frame = () => {
+        angle += 360 / (ropeSpeed / 16); // adjust for frame rate
+        rope.style.transform = `rotate(${angle}deg)`;
+        if (!checkCollision(angle)) {
+            gameOver();
+            return;
         }
+        if (angle < 360) {
+            requestAnimationFrame(frame);
+        } else {
+            score++;
+            adjustDifficulty();
+            setTimeout(() => requestAnimationFrame(frame), 0);
+        }
+    };
+    requestAnimationFrame(frame);
+}
 
-        // MMS position indicator
-        svg
-          .append('text')
-          .attr('x', width - 100)
-          .attr('y', 50)
-          .text(`MMS: ${phaseData.mmsPosition} sector`)
-          .attr('fill', 'white');
-      }
+function checkCollision(angle) {
+    const jumpWindow = 30; // degrees where jumping is allowed
+    const jumpPosition = 180; // rope position when jump should be initiated
+    if (angle > jumpPosition - jumpWindow && angle < jumpPosition + jumpWindow && !isJumping) {
+        return false;
+    }
+    return true;
+}
 
-      function showInfo(phase, probeIndex) {
-        d3.select('#info')
-          .style('display', 'block')
-          .html(
-            `Phase: ${phase}<br>Probe ${probeIndex + 3}: Studying ${
-              phaseData.sector
-            } interactions`
-          )
-          .style('left', d3.event.pageX + 10 + 'px')
-          .style('top', d3.event.pageY - 28 + 'px');
-      }
+function jump(e) {
+    if (e.code === 'Space' && !isJumping) {
+        isJumping = true;
+        player.style.animation = 'jump 0.5s';
+        setTimeout(() => {
+            isJumping = false;
+            player.style.animation = '';
+        }, 500);
+    }
+}
 
-      function hideInfo() {
-        d3.select('#info').style('display', 'none');
-      }
+function adjustDifficulty() {
+    ropeSpeed = Math.max(500, ropeSpeed - 50); // Speed up but not too fast
+}
 
-      function showPhase(phase) {
-        drawOrbits(phase);
-      }
+function addDistraction() {
+    const types = ['ball', 'airplane', 'bird'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.innerHTML = {
+        'ball': '<circle cx="15" cy="15" r="15" fill="red"/>',
+        'airplane': '<path d="M40 10 L20 20 L10 10 L10 30 L40 30 Z" fill="grey"/>',
+        'bird': '<path d="M20 10 Q10 20 20 30 L30 20 L20 10 Z" fill="black"/>'
+    }[type];
+    svg.classList.add('distraction');
+    svg.style.left = `${gameArea.clientWidth}px`;
+    svg.style.top = `${Math.random() * (gameArea.clientHeight - 30)}px`;
+    gameArea.appendChild(svg);
+    
+    const moveDistraction = () => {
+        let pos = parseFloat(svg.style.left);
+        svg.style.left = `${pos - 5}px`;
+        if (pos > -30) {
+            requestAnimationFrame(moveDistraction);
+        } else {
+            gameArea.removeChild(svg);
+        }
+    };
+    requestAnimationFrame(moveDistraction);
+}
 
-      // Initial draw
-      drawOrbits('Tail');
-    </script>
-  </body>
+function gameOver() {
+    clearInterval(gameInterval);
+    clearInterval(distractionInterval);
+    document.removeEventListener('keydown', jump);
+    gameOverSign.style.display = 'block';
+}
+
+startGame();
+</script>
+</body>
 </html>

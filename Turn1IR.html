@@ -1,1 +1,319 @@
-T1IR
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skipping Game</title>
+<style>
+body, html {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(to bottom, #87CEEB, #ffffff);
+    font-family: 'Helvetica', sans-serif;
+}
+
+#game-area {
+    position: relative;
+    width: 800px;
+    height: 600px;
+    overflow: hidden;
+    background-color: transparent;
+}
+
+#ground {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 800px;
+    height: 100px;
+    z-index: -1;
+    background: #228B22;
+}
+
+#player {
+    position: absolute;
+    bottom: 0;
+    left: 375px;
+    width: 50px;
+    height: 100px;
+    transition: bottom 0.3s ease-out;
+}
+
+.distraction {
+    position: absolute;
+}
+
+#game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 64px;
+    color: #ff0000;
+    display: none;
+    text-shadow: 3px 3px #000;
+}
+#jumplog {
+    position: absolute;
+
+    top: 10px;
+    right: 10px;
+    font-size: 32px;
+    color: #ffffff;
+    text-shadow: 2px 2px #000;
+}
+#score {
+    position: absolute;
+    z-index: -1;
+    top: 10px;
+    right: 10px;
+    font-size: 32px;
+    color: #ffffff;
+    text-shadow: 2px 2px #000;
+}
+
+#rope {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 800px;
+    height: 600px;
+    pointer-events: none;
+}
+
+#rope-path {
+    stroke: #8B4513;
+    stroke-width: 8;
+    fill: none;
+}
+
+</style>
+</head>
+<body>
+<div id="game-area">
+    <div id="score">Score: 0</div>
+    <div id="jumplog">Jumping Game</div>
+    <svg id="rope" xmlns="http://www.w3.org/2000/svg" width="800" height="600">
+        <path id="rope-path"/>
+    </svg>
+    <svg id="player  " xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="1080" height="1080" viewBox="0 0 1080 1080" xml:space="preserve">
+        <desc>Created with Fabric.js 5.2.4</desc>
+        <defs>
+        </defs>
+        <g transform="matrix(1 0 0 1 540 540)" id="f89435ae-b442-4b8d-8f50-b35f5b9ad19c">
+        <rect style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1; visibility: hidden;" vector-effect="non-scaling-stroke" x="-540" y="-540" rx="0" ry="0" width="1080" height="1080"/>
+        </g>
+        <g transform="matrix(1 0 0 1 540 540)" id="53061892-684b-4ec4-a97c-780012cc7158">
+        </g>
+        <g transform="matrix(9.82 0 0 9.82 540 212.74)">
+        <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;" vector-effect="non-scaling-stroke" transform=" translate(-50, -16.67)" d="M 37.5 16.668 C 37.5 9.7618 43.0977 4.167999999999999 50 4.167999999999999 C 56.9023 4.167999999999999 62.5 9.7618 62.5 16.668 C 62.5 23.5703 56.9023 29.168 50 29.168 C 43.0977 29.168 37.5 23.5703 37.5 16.668 z" stroke-linecap="round"/>
+        </g>
+        <g transform="matrix(9.82 0 0 9.82 540 665.42)">
+        <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;" vector-effect="non-scaling-stroke" transform=" translate(-50, -62.77)" d="M 50 37.5 C 43.7891 37.5 38.211 34.7812 34.394999999999996 30.4727 C 31.500499999999995 30.23442 28.801199999999994 29.98051 26.594199999999997 29.76176 C 21.328599999999998 29.23051 16.6684 33.34766 16.6684 38.71096 C 16.6684 42.10156 18.5825 45.19926 21.613699999999998 46.71486 L 26.851999999999997 49.33206 C 28.664499999999997 50.242219999999996 29.812899999999996 50.81646 30.656699999999997 51.32816 C 31.449669999999998 51.808629999999994 31.7309 52.082069999999995 31.879399999999997 52.269569999999995 C 32.18799 52.64847999999999 32.422369999999994 53.07816 32.578619999999994 53.539069999999995 C 32.656744999999994 53.765629999999994 32.74267999999999 54.14845 32.72315 55.07427 C 32.703618999999996 56.06646 32.578619999999994 57.33987 32.37549 59.35947 L 29.67239 86.39447 C 29.16848 91.44917 33.13719 95.83197 38.21539 95.83197 C 42.15679 95.83197 45.59039 93.15227 46.54739 89.32807 L 48.86379 80.05467 C 48.9966 79.53123000000001 49.46535 79.16795 50.00049 79.16795 C 50.53563 79.16795 51.00439 79.53123000000001 51.13719 80.05467 L 53.45359 89.32807 C 54.41062 93.15227 57.84419 95.83197 61.78559 95.83197 C 66.86369 95.83197 70.83249 91.44917 70.32858999999999 86.39447 L 67.62548999999999 59.35947 C 67.42236999999999 57.33997 67.29736999999999 56.06647 67.27782999999998 55.07427 C 67.25829799999998 54.148489999999995 67.34423599999998 53.76567 67.42235999999998 53.539069999999995 C 67.57860999999998 53.078129999999994 67.81297999999998 52.64845 68.12157999999998 52.269569999999995 C 68.27001999999997 52.082069999999995 68.55126999999997 51.808629999999994 69.34427999999998 51.32816 C 70.18802999999998 50.81644 71.33647999999998 50.242259999999995 73.14897999999998 49.33206 L 78.38727999999998 46.71486 C 81.41847999999997 45.19926 83.33257999999998 42.10156 83.33257999999998 38.71096 C 83.33257999999998 33.34766 78.67237999999998 29.23046 73.40677999999998 29.761760000000002 C 71.19977999999999 29.980510000000002 68.50057999999999 30.234420000000004 65.60597999999999 30.472700000000003 C 61.785679999999985 34.7813 56.21147999999999 37.5 50.000979999999984 37.5 z" stroke-linecap="round"/>
+        </g>
+        </svg>
+    <div id="ground"></div>
+    <div id="game-over">GAME OVER</div>
+</div>
+
+<script>
+const gameArea = document.getElementById('game-area');
+const player = document.getElementById('player');
+const ropePath = document.getElementById('rope-path');
+const gameOverSign = document.getElementById('game-over');
+const scoreElement = document.getElementById('score');
+
+let score = 0;
+let ropeSpeed = 2000;
+let isJumping = false;
+let gameRunning = false;
+let angle = 0;
+let lastTimestamp = null;
+let playerY = 0;
+
+// New variables for scoring logic
+let ropeUnderPlayer = false;
+let scoredThisPass = false;
+
+const GAME_HEIGHT = 600;
+const PLAYER_HEIGHT = 100;
+const PLAYER_BOTTOM = 0;
+const ROPE_RADIUS = 50; // Adjusted radius for proper rope swing
+const PLAYER_FEET_Y = GAME_HEIGHT - PLAYER_BOTTOM - 10;
+const ROPE_CENTER_Y = PLAYER_FEET_Y - ROPE_RADIUS;
+
+function startGame() {
+    gameRunning = true;
+    score = 0;
+    ropeSpeed = 2000;
+    updateScore();
+    gameOverSign.style.display = 'none';
+    lastTimestamp = null;
+    angle = 0; // Reset angle
+    playerY = 0; // Reset player's vertical position
+    player.style.bottom = '0px'; // Ensure player starts at the bottom
+    isJumping = false;
+    ropeUnderPlayer = false;
+    scoredThisPass = false;
+    requestAnimationFrame(gameLoop);
+    setTimeout(addDistraction, Math.random() * 3000 + 1000);
+}
+
+function gameLoop(timestamp) {
+    if (!gameRunning) return;
+
+    if (lastTimestamp === null) lastTimestamp = timestamp;
+    const deltaTime = timestamp - lastTimestamp;
+    lastTimestamp = timestamp;
+
+    angle += (deltaTime / ropeSpeed) * 360;
+    angle %= 360;
+
+    updateRope();
+
+    if (checkCollision()) {
+        gameOver();
+        return;
+    }
+
+    // Check if rope is under player
+    if (angle >= 260 && angle <= 280) {
+        if (!ropeUnderPlayer) {
+            ropeUnderPlayer = true;
+
+            if (isJumping && !scoredThisPass) {
+                score++;
+                updateScore();
+                ropeSpeed = Math.max(500, ropeSpeed - 50);
+                scoredThisPass = true;
+            }
+        }
+    } else {
+        ropeUnderPlayer = false;
+        scoredThisPass = false;
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+function updateRope() {
+    const radian = (angle * Math.PI) / 180;
+    const ropeY = ROPE_CENTER_Y + ROPE_RADIUS * Math.sin(radian);
+
+    const pathData = `
+        M 0 ${ROPE_CENTER_Y}
+        Q 400 ${ropeY} 800 ${ROPE_CENTER_Y}
+    `;
+    ropePath.setAttribute('d', pathData);
+}
+
+function checkCollision() {
+    const radian = (angle * Math.PI) / 180;
+    const ropeY = ROPE_CENTER_Y + ROPE_RADIUS * Math.sin(radian);
+    const currentFeetY = PLAYER_FEET_Y + playerY;
+
+    // Adjust collision sensitivity as needed
+    return !isJumping && Math.abs(ropeY - currentFeetY) < 5;
+}
+
+function jump() {
+    if (isJumping || !gameRunning) return;
+    isJumping = true;
+    playerY = 100; // Player jumps up by 100 pixels
+    player.style.bottom = '100px';
+    setTimeout(() => {
+        player.style.bottom = '0px';
+        playerY = 0; // Player lands back
+        setTimeout(() => {
+            isJumping = false;
+        }, 300);
+    }, 300);
+}
+
+function addDistraction() {
+    if (!gameRunning) return;
+
+    const types = ['ball', 'airplane', 'bird'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    const distraction = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    distraction.setAttribute('class', 'distraction');
+    distraction.setAttribute('width', '40');
+    distraction.setAttribute('height', '40');
+
+    let path;
+    switch (type) {
+        case 'ball':
+            path = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            path.setAttribute('cx', '20');
+            path.setAttribute('cy', '20');
+            path.setAttribute('r', '20');
+            path.setAttribute('fill', 'red');
+            break;
+        case 'airplane':
+            path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute('d', 'M20 5 L5 30 L35 30 Z');
+            path.setAttribute('fill', 'gray');
+            break;
+        case 'bird':
+            path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute('d', 'M0 20 Q20 5 40 20 Q20 35 0 20');
+            path.setAttribute('fill', 'black');
+            break;
+    }
+
+    distraction.appendChild(path);
+    gameArea.appendChild(distraction);
+
+    const startX = gameArea.clientWidth;
+    const startY = Math.random() * (gameArea.clientHeight - 40);
+    distraction.style.position = 'absolute';
+    distraction.style.left = `${startX}px`;
+    distraction.style.top = `${startY}px`;
+
+    function animateDistraction() {
+        if (!gameRunning) {
+            gameArea.removeChild(distraction);
+            return;
+        }
+
+        const x = parseFloat(distraction.style.left) - 2;
+        distraction.style.left = `${x}px`;
+
+        if (x > -40) {
+            requestAnimationFrame(animateDistraction);
+        } else {
+            gameArea.removeChild(distraction);
+        }
+    }
+
+    requestAnimationFrame(animateDistraction);
+    setTimeout(addDistraction, Math.random() * 3000 + 1000);
+}
+
+function updateScore() {
+    scoreElement.textContent = `Score: ${score}`;
+}
+
+function gameOver() {
+    gameRunning = false;
+    gameOverSign.style.display = 'block';
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+        if (!gameRunning) {
+            startGame();
+        } else {
+            jump();
+        }
+    }
+});
+
+startGame();
+</script>
+</body>
+</html>
+     
