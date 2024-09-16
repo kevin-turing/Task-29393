@@ -56,15 +56,41 @@ body, html {
     display: none;
     text-shadow: 3px 3px #000;
 }
+
+#restart-button {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: none;
+}
+
+#countdown {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 64px;
+    color: #000;
+    display: none;
+    text-shadow: 2px 2px #fff;
+}
+
 #jumplog {
     position: absolute;
-
     top: 10px;
     right: 10px;
     font-size: 32px;
     color: #ffffff;
     text-shadow: 2px 2px #000;
 }
+
 #score {
     position: absolute;
     z-index: -1;
@@ -114,9 +140,11 @@ body, html {
         <g transform="matrix(9.82 0 0 9.82 540 665.42)">
         <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;" vector-effect="non-scaling-stroke" transform=" translate(-50, -62.77)" d="M 50 37.5 C 43.7891 37.5 38.211 34.7812 34.394999999999996 30.4727 C 31.500499999999995 30.23442 28.801199999999994 29.98051 26.594199999999997 29.76176 C 21.328599999999998 29.23051 16.6684 33.34766 16.6684 38.71096 C 16.6684 42.10156 18.5825 45.19926 21.613699999999998 46.71486 L 26.851999999999997 49.33206 C 28.664499999999997 50.242219999999996 29.812899999999996 50.81646 30.656699999999997 51.32816 C 31.449669999999998 51.808629999999994 31.7309 52.082069999999995 31.879399999999997 52.269569999999995 C 32.18799 52.64847999999999 32.422369999999994 53.07816 32.578619999999994 53.539069999999995 C 32.656744999999994 53.765629999999994 32.74267999999999 54.14845 32.72315 55.07427 C 32.703618999999996 56.06646 32.578619999999994 57.33987 32.37549 59.35947 L 29.67239 86.39447 C 29.16848 91.44917 33.13719 95.83197 38.21539 95.83197 C 42.15679 95.83197 45.59039 93.15227 46.54739 89.32807 L 48.86379 80.05467 C 48.9966 79.53123000000001 49.46535 79.16795 50.00049 79.16795 C 50.53563 79.16795 51.00439 79.53123000000001 51.13719 80.05467 L 53.45359 89.32807 C 54.41062 93.15227 57.84419 95.83197 61.78559 95.83197 C 66.86369 95.83197 70.83249 91.44917 70.32858999999999 86.39447 L 67.62548999999999 59.35947 C 67.42236999999999 57.33997 67.29736999999999 56.06647 67.27782999999998 55.07427 C 67.25829799999998 54.148489999999995 67.34423599999998 53.76567 67.42235999999998 53.539069999999995 C 67.57860999999998 53.078129999999994 67.81297999999998 52.64845 68.12157999999998 52.269569999999995 C 68.27001999999997 52.082069999999995 68.55126999999997 51.808629999999994 69.34427999999998 51.32816 C 70.18802999999998 50.81644 71.33647999999998 50.242259999999995 73.14897999999998 49.33206 L 78.38727999999998 46.71486 C 81.41847999999997 45.19926 83.33257999999998 42.10156 83.33257999999998 38.71096 C 83.33257999999998 33.34766 78.67237999999998 29.23046 73.40677999999998 29.761760000000002 C 71.19977999999999 29.980510000000002 68.50057999999999 30.234420000000004 65.60597999999999 30.472700000000003 C 61.785679999999985 34.7813 56.21147999999999 37.5 50.000979999999984 37.5 z" stroke-linecap="round"/>
         </g>
-        </svg>
+    </svg>
     <div id="ground"></div>
     <div id="game-over">GAME OVER</div>
+    <button id="restart-button">Restart</button>
+    <div id="countdown"></div>
 </div>
 
 <script>
@@ -125,6 +153,8 @@ const player = document.getElementById('player');
 const ropePath = document.getElementById('rope-path');
 const gameOverSign = document.getElementById('game-over');
 const scoreElement = document.getElementById('score');
+const restartButton = document.getElementById('restart-button');
+const countdownElement = document.getElementById('countdown');
 
 let score = 0;
 let ropeSpeed = 2000;
@@ -151,6 +181,7 @@ function startGame() {
     ropeSpeed = 2000;
     updateScore();
     gameOverSign.style.display = 'none';
+    restartButton.style.display = 'none';
     lastTimestamp = null;
     angle = 0; // Reset angle
     playerY = 0; // Reset player's vertical position
@@ -246,7 +277,7 @@ function addDistraction() {
     let path;
     switch (type) {
         case 'ball':
-            path = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+path = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             path.setAttribute('cx', '20');
             path.setAttribute('cy', '20');
             path.setAttribute('r', '20');
@@ -300,20 +331,42 @@ function updateScore() {
 function gameOver() {
     gameRunning = false;
     gameOverSign.style.display = 'block';
+    restartButton.style.display = 'block';
+}
+
+function restartGame() {
+    restartButton.style.display = 'none';
+    gameOverSign.style.display = 'none';
+    countdownElement.style.display = 'block';
+    let count = 5;
+
+    function countdown() {
+        if (count > 0) {
+            countdownElement.textContent = count;
+            count--;
+            setTimeout(countdown, 1000);
+        } else {
+            countdownElement.style.display = 'none';
+            startGame();
+        }
+    }
+
+    countdown();
 }
 
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space') {
-        if (!gameRunning) {
-            startGame();
-        } else {
+        if (!gameRunning && !countdownElement.style.display === 'block') {
+            restartGame();
+        } else if (gameRunning) {
             jump();
         }
     }
 });
 
+restartButton.addEventListener('click', restartGame);
+
 startGame();
 </script>
 </body>
 </html>
-     
